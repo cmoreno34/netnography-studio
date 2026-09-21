@@ -37,25 +37,12 @@ input.txt,textarea{width:100%;border:1px solid var(--line);border-radius:10px;ba
 textarea{overflow:hidden;min-height:60px}
 input.txt:focus,textarea:focus{outline:none;border-color:var(--c,var(--leaf))}
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:4px 0}
-.btn{background:var(--leaf);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:700 14px Archivo;cursor:pointer}
+.btn{background:var(--leaf);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:700 14px Archivo;cursor:pointer;text-decoration:none;display:inline-block}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--soft)}
-.btn:disabled{opacity:.5;cursor:default}
-details.key{border:1px dashed var(--line);border-radius:10px;padding:10px 13px;margin:4px 0 2px;background:var(--ground)}
-details.key summary{cursor:pointer;font:700 12px Archivo;color:var(--leaf-ink)}
-.small{font-size:12px;color:var(--soft)}
-.results{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.vid{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--ground)}
-.vid:hover{border-color:var(--leaf)}
-.vid img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:none;background:var(--sage)}
-.vid b{font:700 13.5px Archivo;display:block;line-height:1.2}
-.vid span{font-size:11.5px;color:var(--soft)}
-.corpus{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--ground);margin-top:8px}
-.cm{border-bottom:1px solid var(--line);padding:6px 0;font-size:13px}
-.cm:last-child{border-bottom:0}
-.cm .a{font-weight:700;color:var(--leaf-ink)}
-.cm .l{color:var(--soft);font-size:11px;margin-left:6px}
-.status{font-size:13px;color:var(--leaf);min-height:18px;margin-top:6px}
-.status.err{color:var(--clay)}
+.how{background:var(--sage);border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin:4px 0 12px;font-size:13px}
+.how ol{margin:6px 0 0;padding-left:20px}.how li{margin:3px 0}
+.how b{color:var(--leaf-ink)}
+.count{font:700 12.5px Archivo;color:var(--leaf);margin-top:6px;min-height:16px}
 .copybtn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 13px;font:600 12.5px Archivo;cursor:pointer;margin-bottom:10px}
 .copybtn:hover{border-color:var(--leaf)}
 pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;margin:0 0 10px;font:400 12px/1.6 ui-monospace,monospace;white-space:pre-wrap}
@@ -71,9 +58,9 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
 .hint{font-size:12.5px;color:var(--clay);margin:4px 0 0}
 .printonly{display:none}
 @media print{
-  header .themebtn,.tools2,.copybtn,pre.prompt,.step .lead,.bar,details.key,.results,.btn{display:none!important}
+  header .themebtn,.tools2,.copybtn,pre.prompt,.step .lead,.bar,.how,.btn{display:none!important}
   body{background:#fff;color:#000;padding:0}.step{border:1px solid #bbb;border-left:5px solid #666;break-inside:avoid;box-shadow:none}
-  textarea,input.txt{border-color:#bbb;background:#fff;color:#000}.corpus{max-height:none}
+  textarea,input.txt{border-color:#bbb;background:#fff;color:#000}
   .printonly{display:block;margin-bottom:10px;border-bottom:2px solid #2f6b4f;padding-bottom:6px}
 }
 </style></head>
@@ -85,7 +72,7 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
 </header>
 <div class="printonly"><div style="font:700 11px Archivo;letter-spacing:.1em;text-transform:uppercase;color:#2f6b4f">Estudios de Mercado I · Tema 3 — Netnography worksheet (P06B)</div></div>
 
-<p class="sub">Treat one YouTube video as a field site. Find it, pull its comments in, read them as naturally-occurring qualitative data, and code them to themes and a decision. Companion to practical <b>P06B</b>.</p>
+<p class="sub">Treat one YouTube video as a field site. Grab its comments — customers talking unprompted — read them as qualitative data, and code them to themes and a decision. Companion to practical <b>P06B</b>.</p>
 
 <div class="who">
   <label>Name / group <input id="w_name" placeholder="Group 3 — A. García"></label>
@@ -93,27 +80,26 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
 </div>
 
 <div class="step" style="--c:var(--c1)">
-  <h2><span class="n">1</span> Find the video, pull the comments</h2>
-  <p class="lead">Search a brand/topic or paste a video URL. With a free YouTube API key the comments load automatically; without one, paste them by hand below. The comments are the data — pick a video with a rich text thread.</p>
-  <details class="key" id="keyBox">
-    <summary>YouTube API key (optional, for automatic loading) — tap to set</summary>
-    <p class="small" style="margin:8px 0">Use your <b>own</b> free key (Google Cloud → APIs &amp; Services → enable “YouTube Data API v3” → create an API key). It stays in this browser only and is never shared. Guide: <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank" rel="noopener">developers.google.com/youtube</a></p>
-    <input class="txt" id="w_key" placeholder="AIza… your YouTube Data API v3 key" autocomplete="off">
-  </details>
-  <label class="fl" for="w_query">Search YouTube (brand, product, campaign…)</label>
-  <div class="row"><input class="txt" id="w_query" placeholder="e.g. Zara haul review" style="flex:1;min-width:200px"><button class="btn" id="btnSearch">Search</button></div>
-  <div class="results" id="results"></div>
-  <label class="fl" for="w_url" style="margin-top:12px">…or paste a video URL directly</label>
-  <div class="row"><input class="txt" id="w_url" placeholder="https://www.youtube.com/watch?v=…" style="flex:1;min-width:200px"><button class="btn" id="btnFetch">Load comments</button></div>
-  <div class="status" id="status"></div>
-  <div class="corpus" id="corpus" style="display:none"></div>
-  <label class="fl" for="w_manual" style="margin-top:10px">No key? Paste comments here instead</label>
-  <textarea id="w_manual" style="min-height:80px" placeholder="Paste a batch of comments — one per line is fine."></textarea>
+  <h2><span class="n">1</span> Bring the comments in</h2>
+  <p class="lead">Pick a video with a rich comment thread. Open it, copy a good batch of comments, and paste them below — the comments are your data.</p>
+  <label class="fl" for="w_url">Video URL (for your record)</label>
+  <div class="row"><input class="txt" id="w_url" placeholder="https://www.youtube.com/watch?v=…" style="flex:1;min-width:200px"><a class="btn" id="openBtn" href="https://youtube.com" target="_blank" rel="noopener">Open video ▶</a></div>
+  <div class="how">
+    <b>How to grab the comments (30 seconds, no login):</b>
+    <ol>
+      <li>Open the video and scroll down to the comments; set them to <b>Top comments</b>.</li>
+      <li>Scroll a bit so 40–60 load, then <b>select</b> from the first comment down and <b>copy</b> (Ctrl/Cmd+C).</li>
+      <li><b>Paste</b> into the box below. Don't worry about the likes/reply lines — paste as-is.</li>
+    </ol>
+  </div>
+  <label class="fl" for="w_comments">Paste the comments here</label>
+  <textarea id="w_comments" style="min-height:150px" placeholder="Paste the copied comments. One per line is ideal, but a messy paste is fine — the AI will sort it."></textarea>
+  <div class="count" id="count"></div>
 </div>
 
 <div class="step" style="--c:var(--c2)">
   <h2><span class="n">2</span> Immerse, then code to themes</h2>
-  <p class="lead">Read enough to learn the vocabulary before you code. The prompt below <b>already includes the comments you loaded</b> — it runs the thematic analysis, uses AI as a second coder, and asks for a thematic map.</p>
+  <p class="lead">Read enough to learn the vocabulary before you code. The prompt below <b>already includes the comments you pasted</b> — it runs the thematic analysis, uses AI as a second coder, and asks for a thematic map.</p>
   <div class="tools2">
     <a class="t2 main" href="https://chatgpt.com/g/g-MBeK0q8uJ-qualitative-research" target="_blank" rel="noopener">Qualitative GPT<span>the course assistant</span></a>
     <a class="t2" href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM<span>many comments</span></a>
@@ -145,62 +131,15 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
 <script>
 const $=s=>document.querySelector(s);
 const KEY='mkt3600_netno';
-let corpus=[];   // {a:author, t:text, l:likes}
-let curVideo='';
 function val(id){const e=$('#'+id);return e?e.value.trim():'';}
 function autogrow(t){t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px';}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-/* ---- YouTube helpers ---- */
-function videoId(url){const m=String(url).match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);return m?m[1]:(String(url).trim().length===11?url.trim():'');}
-function apiKey(){return val('w_key');}
-async function ytSearch(q){
-  const k=apiKey(); if(!k){setStatus('Add your API key above to search, or paste a URL / comments.',true);return;}
-  setStatus('Searching…');
-  try{
-    const r=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(q)}&key=${k}`);
-    const d=await r.json(); if(d.error)throw new Error(d.error.message);
-    const res=$('#results');res.innerHTML='';
-    (d.items||[]).forEach(it=>{
-      const id=it.id.videoId;const s=it.snippet;
-      const el=document.createElement('div');el.className='vid';
-      el.innerHTML=`<img src="${s.thumbnails.medium.url}" alt=""><div><b>${esc(s.title)}</b><span>${esc(s.channelTitle)} · ${s.publishedAt.slice(0,10)}</span></div>`;
-      el.onclick=()=>{$('#w_url').value='https://www.youtube.com/watch?v='+id;loadComments(id,s.title);};
-      res.appendChild(el);
-    });
-    setStatus(d.items&&d.items.length?'Pick a video to load its comments.':'No videos found.');
-  }catch(e){setStatus('Search failed: '+e.message,true);}
-}
-async function loadComments(id,title){
-  const k=apiKey(); if(!k){setStatus('Add your API key to load comments automatically, or paste them below.',true);return;}
-  setStatus('Loading comments…'); corpus=[]; curVideo=title||id;
-  try{
-    let page='',pulled=0;
-    for(let i=0;i<3&&pulled<200;i++){
-      const r=await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${id}&maxResults=100&order=relevance&textFormat=plainText&key=${k}${page?'&pageToken='+page:''}`);
-      const d=await r.json(); if(d.error)throw new Error(d.error.message);
-      (d.items||[]).forEach(it=>{const c=it.snippet.topLevelComment.snippet;corpus.push({a:c.authorDisplayName,t:c.textDisplay,l:c.likeCount});});
-      pulled=corpus.length; page=d.nextPageToken||''; if(!page)break;
-    }
-    renderCorpus(); save();
-    setStatus(`Loaded ${corpus.length} comments from “${curVideo}”. Read, then code below.`);
-  }catch(e){setStatus('Could not load comments: '+e.message+' (comments may be disabled — try another video, or paste them).',true);}
-}
-function renderCorpus(){
-  const box=$('#corpus');
-  if(!corpus.length){box.style.display='none';return;}
-  box.style.display='';
-  box.innerHTML=corpus.map(c=>`<div class="cm"><span class="a">${esc(c.a)}</span><span class="l">▲ ${c.l}</span><div>${esc(c.t)}</div></div>`).join('');
-}
-function setStatus(m,err){const s=$('#status');s.textContent=m;s.className='status'+(err?' err':'');}
+function corpusText(){const c=val('w_comments');return c||'[PASTE THE COMMENTS FIRST]';}
+function nLines(){const c=val('w_comments');return c?c.split('\n').filter(x=>x.trim()).length:0;}
+function refreshCount(){const n=nLines();$('#count').textContent=n?`${n} line${n>1?'s':''} pasted — read them, then copy the prompt below.`:'';}
 
-/* ---- corpus text for the prompt ---- */
-function corpusText(){
-  if(corpus.length)return corpus.map(c=>`- ${c.t}`).join('\n');
-  const man=val('w_manual'); return man||'[PASTE OR LOAD THE COMMENTS FIRST]';
-}
 function buildPrompt(){
-  const src=corpus.length?`the video “${curVideo}”`:'a YouTube video';
+  const url=val('w_url');const src=url?`a YouTube video (${url})`:'a YouTube video';
   return `Act as a netnographer analysing public comments from ${src}. This is naturally-occurring qualitative data (Tema 3.6).
 
 COMMENTS:
@@ -218,24 +157,17 @@ Use ONLY these comments — do not invent quotes or data; if the evidence is thi
 }
 function refreshPrompt(){$('#prompt').textContent=buildPrompt();}
 
-/* ---- persistence ---- */
-const ids=['w_name','w_date','w_key','w_manual','w_themes','w_bias','w_dec'];
+const ids=['w_name','w_date','w_url','w_comments','w_themes','w_bias','w_dec'];
 let st;
-function save(){clearTimeout(st);st=setTimeout(()=>{const o={corpus,curVideo};ids.forEach(i=>o[i]=val(i));
+function save(){clearTimeout(st);st=setTimeout(()=>{const o={};ids.forEach(i=>o[i]=val(i));
   try{localStorage.setItem(KEY,JSON.stringify(o));$('#saved').textContent='Saved ✓ '+new Date().toLocaleTimeString();}catch(_){}} ,300);}
+function fixUrl(){const u=val('w_url');const a=$('#openBtn');a.href=/^https?:\/\//.test(u)?u:(u?('https://'+u):'https://youtube.com');}
 (function init(){let s={};try{s=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(_){}
   ids.forEach(i=>{const el=$('#'+i);if(!el)return;el.value=s[i]||'';
-    el.addEventListener('input',()=>{if(el.tagName==='TEXTAREA'){autogrow(el);}save();if(i==='w_manual')refreshPrompt();});
+    el.addEventListener('input',()=>{if(el.tagName==='TEXTAREA'){autogrow(el);}save();if(i==='w_comments'){refreshPrompt();refreshCount();}if(i==='w_url')fixUrl();});
     if(el.tagName==='TEXTAREA')autogrow(el);});
-  if(s.corpus&&s.corpus.length){corpus=s.corpus;curVideo=s.curVideo||'';renderCorpus();}
-  if(s.w_key)$('#keyBox').open=false;
-  refreshPrompt();
+  refreshPrompt();refreshCount();fixUrl();
 })();
-
-/* ---- wire ---- */
-$('#btnSearch').onclick=()=>ytSearch(val('w_query'));
-$('#w_query').addEventListener('keydown',e=>{if(e.key==='Enter')ytSearch(val('w_query'));});
-$('#btnFetch').onclick=()=>{const id=videoId(val('w_url'));if(!id){setStatus('That does not look like a YouTube URL.',true);return;}loadComments(id,'');};
 function copy(text,btn){const o=btn.textContent;const ok=()=>{btn.textContent='copied ✓';setTimeout(()=>btn.textContent=o,1200);};
   const fb=()=>{try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.top='-1000px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);ok();}catch(_){btn.textContent='Ctrl+C';}};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(fb);}else{fb();}}
