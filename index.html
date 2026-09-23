@@ -66,10 +66,15 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
 .saved{font-size:12px;color:var(--soft)}
 .hint{font-size:12.5px;color:var(--clay);margin:4px 0 0}
 .printonly{display:none}
+.printmirror{display:none}
 @media print{
-  header .themebtn,.tools2,.copybtn,pre.prompt,.step .lead,.bar,.how,.btn{display:none!important}
+  header .themebtn,.tools2,.copybtn,pre.prompt,.step .lead,.bar,.how,.btn,.chip2,.count,.mapmsg{display:none!important}
   body{background:#fff;color:#000;padding:0}.step{border:1px solid #bbb;border-left:5px solid #666;break-inside:avoid;box-shadow:none}
   textarea,input.txt{border-color:#bbb;background:#fff;color:#000}
+  #w_comments,#w_airesult{display:none!important}
+  .printmirror{display:block;white-space:pre-wrap;word-break:break-word;font:11px/1.5 Archivo;border:1px solid #bbb;border-radius:8px;padding:10px;background:#fff;margin:2px 0 8px}
+  .printmirror:empty{display:none}
+  .mapout{display:block!important;border:1px solid #bbb}
   .printonly{display:block;margin-bottom:10px;border-bottom:2px solid #2f6b4f;padding-bottom:6px}
 }
 </style></head>
@@ -104,6 +109,7 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
   <label class="fl" for="w_comments">Paste the comments here — any length; the box stays put and scrolls inside</label>
   <textarea id="w_comments" class="capped" style="height:150px;max-height:260px" placeholder="Paste the copied comments — 30, 60, 200, it doesn't matter. One per line is ideal, but a messy paste is fine; the AI will sort it. It collapses to a tidy line once you click away, so the rest of the worksheet stays in view."></textarea>
   <div class="chip2" id="commentsChip" style="display:none"><span>✓ <b id="chipN">0</b> comments loaded — the worksheet continues below</span><span class="edit">click to view / edit</span></div>
+  <pre class="printmirror" id="commentsPrint"></pre>
   <div class="count" id="count"></div>
 </div>
 
@@ -131,20 +137,21 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
   <label class="fl" for="w_airesult">Paste the AI's full answer back here — including the <code>```mermaid</code> map block</label>
   <textarea id="w_airesult" class="capped" style="height:150px;max-height:260px" placeholder="Paste everything the AI returned: the codes, the themes with quotes, the bias note, and the ```mermaid ... ``` map. Then press ‘Draw the map’. It collapses once you click away."></textarea>
   <div class="chip2" id="aiChip" style="display:none"><span>✓ AI answer pasted — map drawn below</span><span class="edit">click to view / edit</span></div>
+  <pre class="printmirror" id="aiPrint"></pre>
   <div class="row"><button class="copybtn" id="drawmap" style="margin:0">◇ Draw the map</button></div>
   <p class="mapmsg" id="mapmsg"></p>
   <div class="mapout" id="mapout" style="display:none"></div>
-  <label class="fl" for="w_themes">Your themes (3-5) + a real comment-quote for each — verify each against a real comment</label>
-  <textarea id="w_themes" placeholder="Theme 1 — … “comment”. Theme 2 — … “comment”. (Grounded theory: build the themes UP from the comments; delete any the AI proposed that you cannot back with two real quotes.)"></textarea>
+  <label class="fl" for="w_themes">Your read of the AI's analysis — which themes hold up, which you cut, and why</label>
+  <textarea id="w_themes" placeholder="Comment on the AI's result: Theme 1 holds — two real quotes: “…”, “…”. Theme 2 I cut — only one person said it. Theme 3 the AI missed but I saw it in the comments. (You are the analyst; the AI was the first-pass second coder.)"></textarea>
 </div>
 
 <div class="step" style="--c:var(--c3)">
-  <h2><span class="n">3</span> The medium's bias, then decide</h2>
-  <p class="lead">A comment thread over-represents the loud, the delighted and the furious. Name what it hides — then make the call.</p>
+  <h2><span class="n">3</span> The medium's bias, then the decision <b>for the brand</b></h2>
+  <p class="lead">A comment thread over-represents the loud, the delighted and the furious. Name what it hides — then say what the <b>brand should DO</b> about it. The decision is a marketing action, not a summary.</p>
   <label class="fl" for="w_bias">What this thread over- or under-represents</label>
   <textarea id="w_bias" placeholder="e.g. Heavy on complaints about sizing; almost no voice from happy silent buyers; skews young."></textarea>
-  <label class="fl" for="w_dec">The decision + the question comments can't answer</label>
-  <textarea id="w_dec" style="min-height:90px" placeholder="e.g. Fix the size guide first. But comments can't tell us how common the problem is — that needs a survey."></textarea>
+  <label class="fl" for="w_dec">The decision FOR THE BRAND — what should they DO? + the question the comments can't answer</label>
+  <textarea id="w_dec" style="min-height:96px" placeholder="Decision (an action the brand should take): e.g. “Redesign the size guide and show fit photos on the product page.” Then the limit: “But the comments can't tell us HOW COMMON the sizing problem is — that needs a survey.”"></textarea>
 </div>
 
 <div class="bar">
@@ -228,7 +235,9 @@ function copy(text,btn){const o=btn.textContent;const ok=()=>{btn.textContent='c
   const fb=()=>{try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.top='-1000px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);ok();}catch(_){btn.textContent='Ctrl+C';}};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(fb);}else{fb();}}
 $('#copyprompt').onclick=e=>copy(buildPrompt(),e.currentTarget);
-$('#pdf').onclick=()=>{if(!val('w_date'))$('#w_date').value=new Date().toLocaleDateString();window.print();};
+function syncPrintMirrors(){$('#commentsPrint').textContent=val('w_comments');$('#aiPrint').textContent=val('w_airesult');}
+window.addEventListener('beforeprint',syncPrintMirrors);
+$('#pdf').onclick=()=>{if(!val('w_date'))$('#w_date').value=new Date().toLocaleDateString();syncPrintMirrors();window.print();};
 $('#clear').onclick=()=>{if(confirm('Clear the worksheet? Download your PDF first if you need it.')){localStorage.removeItem(KEY);location.reload();}};
 const root=document.documentElement;$('#theme').onclick=()=>{const c=root.getAttribute('data-theme');root.setAttribute('data-theme',c==='dark'?'light':c==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));};
 </script>
