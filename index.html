@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
 :root{
   --ground:#f4f2ea;--panel:#fbfaf5;--ink:#17251d;--soft:#4a5a50;--leaf:#2f6b4f;--leaf-ink:#21503b;
@@ -35,7 +36,11 @@ h1{font-family:Fraunces,Georgia,serif;font-weight:900;font-size:clamp(26px,5vw,3
 label.fl{display:block;font:700 11px Archivo;letter-spacing:.06em;text-transform:uppercase;margin:6px 0 6px}
 input.txt,textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--ground);color:var(--ink);padding:11px 13px;font:400 14px/1.5 Archivo;resize:none}
 textarea{overflow:hidden;min-height:60px}
+textarea.capped{overflow:auto;resize:vertical}
 input.txt:focus,textarea:focus{outline:none;border-color:var(--c,var(--leaf))}
+.mapout{margin:8px 0 2px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:auto;text-align:center}
+.mapout svg{max-width:100%;height:auto}
+.mapmsg{font-size:12.5px;color:var(--soft);margin:2px 0 8px}
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:4px 0}
 .btn{background:var(--leaf);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:700 14px Archivo;cursor:pointer;text-decoration:none;display:inline-block}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--soft)}
@@ -92,8 +97,8 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
       <li><b>Paste</b> into the box below. Don't worry about the likes/reply lines — paste as-is.</li>
     </ol>
   </div>
-  <label class="fl" for="w_comments">Paste the comments here</label>
-  <textarea id="w_comments" style="min-height:150px" placeholder="Paste the copied comments. One per line is ideal, but a messy paste is fine — the AI will sort it."></textarea>
+  <label class="fl" for="w_comments">Paste the comments here — any length; the box stays put and scrolls inside</label>
+  <textarea id="w_comments" class="capped" style="height:200px;max-height:340px" placeholder="Paste the copied comments — 30, 60, 200, it doesn't matter. One per line is ideal, but a messy paste is fine; the AI will sort it. The box scrolls internally so the page doesn't jump."></textarea>
   <div class="count" id="count"></div>
 </div>
 
@@ -107,8 +112,13 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
   </div>
   <button class="copybtn" id="copyprompt">copy the netnography prompt (with the comments)</button>
   <pre class="prompt" id="prompt"></pre>
-  <label class="fl" for="w_themes">Your themes (3-5) + a real comment-quote for each</label>
-  <textarea id="w_themes" placeholder="Theme 1 — … “comment”. Theme 2 — … “comment”. (Verify every AI theme against a real comment.)"></textarea>
+  <label class="fl" for="w_airesult">Paste the AI's full answer back here — including the <code>```mermaid</code> map block</label>
+  <textarea id="w_airesult" class="capped" style="height:170px;max-height:320px" placeholder="Paste everything the AI returned: the codes, the themes with quotes, the bias note, and the ```mermaid ... ``` map. Then press ‘Draw the map’."></textarea>
+  <div class="row"><button class="copybtn" id="drawmap" style="margin:0">◇ Draw the map</button></div>
+  <p class="mapmsg" id="mapmsg"></p>
+  <div class="mapout" id="mapout" style="display:none"></div>
+  <label class="fl" for="w_themes">Your themes (3-5) + a real comment-quote for each — verify each against a real comment</label>
+  <textarea id="w_themes" placeholder="Theme 1 — … “comment”. Theme 2 — … “comment”. (Grounded theory: build the themes UP from the comments; delete any the AI proposed that you cannot back with two real quotes.)"></textarea>
 </div>
 
 <div class="step" style="--c:var(--c3)">
@@ -157,17 +167,35 @@ Use ONLY these comments — do not invent quotes or data; if the evidence is thi
 }
 function refreshPrompt(){$('#prompt').textContent=buildPrompt();}
 
-const ids=['w_name','w_date','w_url','w_comments','w_themes','w_bias','w_dec'];
+const ids=['w_name','w_date','w_url','w_comments','w_airesult','w_themes','w_bias','w_dec'];
 let st;
 function save(){clearTimeout(st);st=setTimeout(()=>{const o={};ids.forEach(i=>o[i]=val(i));
   try{localStorage.setItem(KEY,JSON.stringify(o));$('#saved').textContent='Saved ✓ '+new Date().toLocaleTimeString();}catch(_){}} ,300);}
 function fixUrl(){const u=val('w_url');const a=$('#openBtn');a.href=/^https?:\/\//.test(u)?u:(u?('https://'+u):'https://youtube.com');}
 (function init(){let s={};try{s=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(_){}
   ids.forEach(i=>{const el=$('#'+i);if(!el)return;el.value=s[i]||'';
-    el.addEventListener('input',()=>{if(el.tagName==='TEXTAREA'){autogrow(el);}save();if(i==='w_comments'){refreshPrompt();refreshCount();}if(i==='w_url')fixUrl();});
-    if(el.tagName==='TEXTAREA')autogrow(el);});
+    const capped=el.classList.contains('capped');
+    el.addEventListener('input',()=>{if(el.tagName==='TEXTAREA'&&!capped){autogrow(el);}save();if(i==='w_comments'){refreshPrompt();refreshCount();}if(i==='w_url')fixUrl();});
+    if(el.tagName==='TEXTAREA'&&!capped)autogrow(el);});
   refreshPrompt();refreshCount();fixUrl();
 })();
+
+/* ---- draw the thematic map from the pasted AI answer ---- */
+try{mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'neutral'});}catch(_){}
+function extractMermaid(t){
+  let m=t.match(/```mermaid\s*([\s\S]*?)```/i); if(m)return m[1].trim();
+  m=t.match(/(^|\n)\s*(mindmap[\s\S]+)/i); if(m)return m[2].trim();
+  m=t.match(/(^|\n)\s*(graph\s+(TD|LR|TB)[\s\S]+)/i); if(m)return m[2].trim();
+  return '';
+}
+$('#drawmap').onclick=async()=>{
+  const code=extractMermaid(val('w_airesult'));
+  const out=$('#mapout'),msg=$('#mapmsg');
+  if(!code){msg.textContent='No map found. Paste the AI answer including its ```mermaid … ``` block, then press Draw the map.';out.style.display='none';return;}
+  msg.textContent='';
+  try{const {svg}=await mermaid.render('mmap_'+Date.now(),code);out.innerHTML=svg;out.style.display='';}
+  catch(e){out.style.display='none';msg.textContent='Could not draw it — the map syntax has an error. Ask the AI: “return the map again as a valid Mermaid mindmap”, then paste and retry.';}
+};
 function copy(text,btn){const o=btn.textContent;const ok=()=>{btn.textContent='copied ✓';setTimeout(()=>btn.textContent=o,1200);};
   const fb=()=>{try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.top='-1000px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);ok();}catch(_){btn.textContent='Ctrl+C';}};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(fb);}else{fb();}}
