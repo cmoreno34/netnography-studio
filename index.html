@@ -110,7 +110,7 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
   <textarea id="w_comments" class="capped" style="height:150px;max-height:260px" placeholder="Paste the copied comments — 30, 60, 200, it doesn't matter. One per line is ideal, but a messy paste is fine; the AI will sort it. It collapses to a tidy line once you click away, so the rest of the worksheet stays in view."></textarea>
   <div class="chip2" id="commentsChip" style="display:none"><span>✓ <b id="chipN">0</b> comments loaded — the worksheet continues below</span><span class="edit">click to view / edit</span></div>
   <pre class="printmirror" id="commentsPrint"></pre>
-  <div class="count" id="count"></div>
+  <div class="row"><span class="count" id="count" style="flex:1"></span><button class="copybtn" id="clearComments" style="margin:0">✕ Clear the comments</button></div>
 </div>
 
 <div class="step" style="--c:var(--c2)">
@@ -214,6 +214,7 @@ $('#w_comments').addEventListener('blur',()=>collapse('w_comments','commentsChip
 $('#commentsChip').onclick=()=>expand('w_comments','commentsChip');
 $('#w_airesult').addEventListener('blur',()=>collapse('w_airesult','aiChip'));
 $('#aiChip').onclick=()=>expand('w_airesult','aiChip');
+$('#clearComments').onclick=()=>{const t=$('#w_comments');t.value='';t.style.display='';$('#commentsChip').style.display='none';t.dispatchEvent(new Event('input'));t.focus();};
 
 /* ---- draw the thematic map from the pasted AI answer ---- */
 try{mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'neutral'});}catch(_){}
