@@ -128,10 +128,11 @@ pre.prompt{background:#14211b;color:#e8efe6;border-radius:10px;padding:14px;marg
     The prompt below runs steps 2–4 as a <b>first pass</b> (AI = second coder). You judge, verify and decide.
   </div>
   <div class="tools2">
-    <a class="t2 main" href="https://chatgpt.com/g/g-MBeK0q8uJ-qualitative-research" target="_blank" rel="noopener">Qualitative GPT<span>the course assistant</span></a>
-    <a class="t2" href="https://notebooklm.google.com" target="_blank" rel="noopener">NotebookLM<span>many comments</span></a>
-    <a class="t2" href="https://claude.ai" target="_blank" rel="noopener">Claude<span>long threads</span></a>
+    <a class="t2 main" href="https://claude.ai/new" target="_blank" rel="noopener">Claude<span>draws the map reliably</span></a>
+    <a class="t2" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT<span>chatgpt.com</span></a>
+    <a class="t2" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini<span>gemini.google.com</span></a>
   </div>
+  <p class="hint" style="color:var(--soft);margin:0 0 8px">Paste the prompt into a <b>new chat</b>. The answer <b>must include a <code>```mermaid</code> code block</b> — that is the map. ChatGPT and Gemini sometimes skip it: if it's missing, reply <b>“You did not include the map step. Output the thematic map now as a ```mermaid mindmap code block.”</b></p>
   <button class="copybtn" id="copyprompt">copy the netnography prompt (with the comments)</button>
   <pre class="prompt" id="prompt"></pre>
   <label class="fl" for="w_airesult">Paste the AI's full answer back here — including the <code>```mermaid</code> map block</label>
@@ -181,13 +182,32 @@ COMMENTS:
 ${corpusText()}
 """
 
+Do ALL 6 steps below, in order. Step 4 (the map) is MANDATORY — an answer without it is incomplete and will be rejected.
+
 1) OPEN-CODE the comments in the commenters' own words, then group into categories.
 2) Name 3-5 THEMES, each with TWO real verbatim comment-quotes (copy them exactly; never invent).
 3) For each theme give the non-obvious INSIGHT and its implication for the brand.
-4) DRAW A THEMATIC MAP as a Mermaid mindmap (\`\`\`mermaid, type "mindmap"): video → themes → categories → a sample quote each.
+4) THEMATIC MAP — REQUIRED. Write it yourself as Mermaid code inside a fenced code block that starts with \`\`\`mermaid and ends with \`\`\`. Do NOT describe the map in words instead, do NOT say you cannot draw or render images, do NOT generate an image or use a canvas or any other tool, do NOT skip or postpone it and do NOT ask me whether I want it — just write the code as plain text. Use the "mindmap" type:
+   - first line: mindmap
+   - second line: the root (the video), written as  root((Name))
+   - then themes, then categories, then ONE short sample quote per category — one node per line, nested ONLY by indentation (2 spaces per level)
+   - node text: plain words only — NO quotation marks, parentheses, brackets, braces, colons or emojis inside node text (they break the diagram)
+   Example of the exact format:
+\`\`\`mermaid
+mindmap
+  root((Video))
+    Price
+      Too expensive
+        Nice but I would never pay that
+    Trust
+      Fake reviews
+        Every influencer says the same thing
+\`\`\`
 5) THE MEDIUM'S BIAS: say what this comment thread over- and under-represents (the loud, the extreme, the fans), and which findings would NOT survive a representative survey.
 6) End with the single DECISION the evidence supports, and the biggest question the comments CANNOT answer (that needs an interview or survey).
-Use ONLY these comments — do not invent quotes or data; if the evidence is thin, say so.`;
+Use ONLY these comments — do not invent quotes or data; if the evidence is thin, say so.
+
+FINAL CHECK before you answer: does your reply contain the \`\`\`mermaid code block from the map step? If not, add it.`;
 }
 function refreshPrompt(){$('#prompt').textContent=buildPrompt();}
 
@@ -218,16 +238,13 @@ $('#clearComments').onclick=()=>{const t=$('#w_comments');t.value='';t.style.dis
 
 /* ---- draw the thematic map from the pasted AI answer ---- */
 try{mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'neutral'});}catch(_){}
-function extractMermaid(t){
-  let m=t.match(/```mermaid\s*([\s\S]*?)```/i); if(m)return m[1].trim();
-  m=t.match(/(^|\n)\s*(mindmap[\s\S]+)/i); if(m)return m[2].trim();
-  m=t.match(/(^|\n)\s*(graph\s+(TD|LR|TB)[\s\S]+)/i); if(m)return m[2].trim();
-  return '';
-}
+function extractMermaid(t){t=t.replace(/\r/g,'');const ok=c=>/^(mindmap|graph|flowchart)\b/i.test(c);
+  const bl=[...t.matchAll(/(^|\n)[ \t]*```[ \t]*mermaid[ \t]*\n([\s\S]*?)\n[ \t]*```/gi)].map(x=>x[2].trim()).filter(ok);if(bl.length)return bl[bl.length-1];
+  const m=t.match(/(^|\n)[ \t]*((mindmap|graph\s+(TD|LR|TB)|flowchart\s+(TD|LR|TB))\b[\s\S]*)/i);return m?m[2].split(/\n[ \t]*```|\n\s*\n(?=\S)/)[0].trim():'';}
 $('#drawmap').onclick=async()=>{
   const code=extractMermaid(val('w_airesult'));
   const out=$('#mapout'),msg=$('#mapmsg');
-  if(!code){msg.textContent='No map found. Paste the AI answer including its ```mermaid … ``` block, then press Draw the map.';out.style.display='none';return;}
+  if(!code){msg.textContent='No map found. If the AI skipped it, reply: “You did not include the map step. Output the thematic map now as a ```mermaid mindmap code block.” Paste that block here and press Draw the map again.';out.style.display='none';return;}
   msg.textContent='';
   try{const {svg}=await mermaid.render('mmap_'+Date.now(),code);out.innerHTML=svg;out.style.display='';}
   catch(e){out.style.display='none';msg.textContent='Could not draw it — the map syntax has an error. Ask the AI: “return the map again as a valid Mermaid mindmap”, then paste and retry.';}
